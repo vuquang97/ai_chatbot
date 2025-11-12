@@ -1,0 +1,37 @@
+[
+  {
+    "question": "Xin chào",
+    "answer": "Xin chào! Tôi là AI chatbot. Tôi có thể giúp gì cho bạn?",
+    "timestamp": "2025-11-11T10:28:52.803262"
+  },
+  {
+    "question": "Bạn tên gì",
+    "answer": "Tôi là AI chatbot được tạo bằng Python. Bạn có thể gọi tôi là Bot!",
+    "timestamp": "2025-11-11T10:28:52.808267"
+  },
+  {
+    "question": "Bạn có thể làm gì",
+    "answer": "Tôi có thể trả lời câu hỏi dựa trên những gì bạn dạy tôi. Bạn có thể train thêm cho tôi!",
+    "timestamp": "2025-11-11T10:28:52.814278"
+  },
+  {
+    "question": "Thời tiết hôm nay thế nào",
+    "answer": "Xin lỗi, tôi không có khả năng kiểm tra thời tiết thời gian thực. Nhưng bạn có thể dạy tôi cách trả lời!",
+    "timestamp": "2025-11-11T10:28:52.820287"
+  },
+  {
+    "question": "Cảm ơn",
+    "answer": "Không có chi! Rất vui được giúp đỡ bạn 😊",
+    "timestamp": "2025-11-11T10:28:52.826296"
+  },
+  {
+    "question": "Tạm biệt",
+    "answer": "Tạm biệt! Hẹn gặp lại bạn! 👋",
+    "timestamp": "2025-11-11T10:28:52.833308"
+  },
+  {
+    "question": "hôm nay là ngày bao nhiêu",
+    "answer": "hôm nay là ngày 11/11/2025",
+    "timestamp": "2025-11-11T10:29:26.480193"
+  }
+]
