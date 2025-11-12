@@ -14,7 +14,13 @@ class LocalAIChatbot:
         self.data_file = data_file
         self.model_file = model_file
         self.training_data = []
-        self.vectorizer = TfidfVectorizer(ngram_range=(1, 2))
+        self.vectorizer = TfidfVectorizer(
+            ngram_range=(1, 2),
+            norm='l2',  # ✅ THÊM DÒNG NÀY
+            use_idf=True,
+            smooth_idf=True,
+            sublinear_tf=False
+        )
         self.vectors = None
         
         # Load dữ liệu nếu có

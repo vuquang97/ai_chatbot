@@ -33,5 +33,10 @@
     "question": "hôm nay là ngày bao nhiêu",
     "answer": "hôm nay là ngày 11/11/2025",
     "timestamp": "2025-11-11T10:29:26.480193"
+  },
+  {
+    "question": "Test",
+    "answer": "OK",
+    "timestamp": "2025-11-12T13:07:42.793107"
   }
 ]
