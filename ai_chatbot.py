@@ -1,5 +1,3 @@
-# ai_chatbot.py - AI Chatbot tự build chạy local
-
 import json
 import os
 import re
@@ -14,13 +12,7 @@ class LocalAIChatbot:
         self.data_file = data_file
         self.model_file = model_file
         self.training_data = []
-        self.vectorizer = TfidfVectorizer(
-            ngram_range=(1, 2),
-            norm='l2',  # ✅ THÊM DÒNG NÀY
-            use_idf=True,
-            smooth_idf=True,
-            sublinear_tf=False
-        )
+        self.vectorizer = None  # ✅ Khởi tạo None
         self.vectors = None
         
         # Load dữ liệu nếu có
@@ -35,11 +27,15 @@ class LocalAIChatbot:
             
             # Load model đã train
             if os.path.exists(self.model_file):
-                with open(self.model_file, 'rb') as f:
-                    saved_data = pickle.load(f)
-                    self.vectorizer = saved_data['vectorizer']
-                    self.vectors = saved_data['vectors']
-                print("✓ Đã load model")
+                try:
+                    with open(self.model_file, 'rb') as f:
+                        saved_data = pickle.load(f)
+                        self.vectorizer = saved_data['vectorizer']
+                        self.vectors = saved_data['vectors']
+                    print("✓ Đã load model")
+                except Exception as e:
+                    print(f"⚠️ Không load được model: {e}, sẽ train lại")
+                    self.train()
         else:
             print("! Chưa có dữ liệu training, bắt đầu từ đầu")
             self.training_data = []
@@ -52,13 +48,16 @@ class LocalAIChatbot:
     
     def save_model(self):
         """Lưu model đã train"""
-        if self.vectors is not None:
-            with open(self.model_file, 'wb') as f:
-                pickle.dump({
-                    'vectorizer': self.vectorizer,
-                    'vectors': self.vectors
-                }, f)
-            print("✓ Đã lưu model")
+        if self.vectors is not None and self.vectorizer is not None:
+            try:
+                with open(self.model_file, 'wb') as f:
+                    pickle.dump({
+                        'vectorizer': self.vectorizer,
+                        'vectors': self.vectors
+                    }, f)
+                print("✓ Đã lưu model")
+            except Exception as e:
+                print(f"⚠️ Không lưu được model: {e}")
     
     def preprocess_text(self, text):
         """Tiền xử lý text"""
@@ -88,35 +87,55 @@ class LocalAIChatbot:
             print("! Không có dữ liệu để train")
             return
         
-        questions = [self.preprocess_text(pair['question']) for pair in self.training_data]
-        
-        # Tạo TF-IDF vectors
-        self.vectors = self.vectorizer.fit_transform(questions)
-        self.save_model()
-        print(f"✓ Đã train với {len(questions)} câu hỏi")
+        try:
+            questions = [self.preprocess_text(pair['question']) for pair in self.training_data]
+            
+            # ✅ Tạo vectorizer mới mỗi lần train
+            self.vectorizer = TfidfVectorizer(
+                ngram_range=(1, 2),
+                norm='l2',
+                use_idf=True,
+                smooth_idf=True,
+                sublinear_tf=False
+            )
+            
+            # Tạo TF-IDF vectors
+            self.vectors = self.vectorizer.fit_transform(questions)
+            self.save_model()
+            print(f"✓ Đã train với {len(questions)} câu hỏi")
+            
+        except Exception as e:
+            print(f"❌ Lỗi khi train: {e}")
+            import traceback
+            traceback.print_exc()
     
     def find_best_answer(self, question, threshold=0.3):
         """Tìm câu trả lời phù hợp nhất"""
-        if not self.training_data or self.vectors is None:
+        if not self.training_data or self.vectors is None or self.vectorizer is None:
             return None, 0
         
-        # Preprocess câu hỏi
-        processed_question = self.preprocess_text(question)
-        
-        # Vector hóa câu hỏi
-        question_vector = self.vectorizer.transform([processed_question])
-        
-        # Tính cosine similarity
-        similarities = cosine_similarity(question_vector, self.vectors)[0]
-        
-        # Tìm best match
-        best_idx = np.argmax(similarities)
-        best_score = similarities[best_idx]
-        
-        if best_score >= threshold:
-            return self.training_data[best_idx]['answer'], best_score
-        
-        return None, best_score
+        try:
+            # Preprocess câu hỏi
+            processed_question = self.preprocess_text(question)
+            
+            # Vector hóa câu hỏi
+            question_vector = self.vectorizer.transform([processed_question])
+            
+            # Tính cosine similarity
+            similarities = cosine_similarity(question_vector, self.vectors)[0]
+            
+            # Tìm best match
+            best_idx = np.argmax(similarities)
+            best_score = similarities[best_idx]
+            
+            if best_score >= threshold:
+                return self.training_data[best_idx]['answer'], best_score
+            
+            return None, best_score
+            
+        except Exception as e:
+            print(f"❌ Lỗi khi tìm câu trả lời: {e}")
+            return None, 0
     
     def chat(self, question):
         """Trả lời câu hỏi"""
@@ -218,58 +237,3 @@ class LocalAIChatbot:
         for q, a in qa_pairs:
             self.add_training_pair(q, a)
         print(f"✓ Đã import {len(qa_pairs)} cặp Q&A")
-
-
-# ============================================
-# PHẦN TÍCH HỢP GOOGLE CHAT
-# ============================================
-
-class GoogleChatIntegration:
-    def __init__(self, webhook_url=None):
-        self.webhook_url = webhook_url
-    
-    def send_message(self, text):
-        """Gửi tin nhắn đến Google Chat"""
-        if not self.webhook_url:
-            print("⚠️ Chưa cấu hình webhook URL")
-            return False
-        
-        import requests
-        payload = {"text": text}
-        
-        try:
-            response = requests.post(self.webhook_url, json=payload)
-            if response.status_code == 200:
-                print("✓ Đã gửi đến Google Chat")
-                return True
-            else:
-                print(f"✗ Lỗi: {response.status_code}")
-                return False
-        except Exception as e:
-            print(f"✗ Lỗi kết nối: {e}")
-            return False
-
-
-# ============================================
-# DEMO & USAGE
-# ============================================
-
-if __name__ == "__main__":
-    # Khởi tạo chatbot
-    bot = LocalAIChatbot()
-    
-    # Nếu chưa có dữ liệu, thêm một số ví dụ
-    if len(bot.training_data) == 0:
-        print("\n🎓 Import dữ liệu mẫu...")
-        sample_data = [
-            ("Xin chào", "Xin chào! Tôi là AI chatbot. Tôi có thể giúp gì cho bạn?"),
-            ("Bạn tên gì", "Tôi là AI chatbot được tạo bằng Python. Bạn có thể gọi tôi là Bot!"),
-            ("Bạn có thể làm gì", "Tôi có thể trả lời câu hỏi dựa trên những gì bạn dạy tôi. Bạn có thể train thêm cho tôi!"),
-            ("Thời tiết hôm nay thế nào", "Xin lỗi, tôi không có khả năng kiểm tra thời tiết thời gian thực. Nhưng bạn có thể dạy tôi cách trả lời!"),
-            ("Cảm ơn", "Không có chi! Rất vui được giúp đỡ bạn 😊"),
-            ("Tạm biệt", "Tạm biệt! Hẹn gặp lại bạn! 👋"),
-        ]
-        bot.bulk_import(sample_data)
-    
-    # Chạy chế độ interactive
-    bot.interactive_mode()
