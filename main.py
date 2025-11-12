@@ -37,5 +37,6 @@ def train_endpoint():
     return jsonify({'status': 'error', 'message': 'Thiếu question hoặc answer'}), 400
 
 if __name__ == '__main__':
-    print("🚀 Server đang chạy tại http://localhost:5123")
-    app.run(host='0.0.0.0', port=5123, debug=True)
+    import os
+    port = int(os.environ.get('PORT', 5123))
+    app.run(host='0.0.0.0', port=port, debug=False)  # debug=False khi deploy
