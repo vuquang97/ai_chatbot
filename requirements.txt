@@ -1,4 +1,5 @@
 flask
+gunicorn
 sentence-transformers
 torch
 scikit-learn
